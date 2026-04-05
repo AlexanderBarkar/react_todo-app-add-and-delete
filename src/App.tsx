@@ -6,22 +6,21 @@ import { ErrorNotification } from './components/ErrorNotification';
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [title, setTitle] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // ✅ СНАЧАЛА объявляем функцию
   const loadTodos = async () => {
     try {
       const data = await getTodos();
       setTodos(data);
+      setError(null); // ✅ очищаем ошибку
     } catch {
       setError('Unable to load todos');
     }
   };
 
-  // ✅ ПОТОМ используем
   useEffect(() => {
     loadTodos();
     inputRef.current?.focus();
@@ -41,8 +40,10 @@ export const App: React.FC = () => {
       setIsAdding(true);
 
       const newTodo = await createTodo(trimmed);
+
       setTodos(prev => [...prev, newTodo]);
       setTitle('');
+      setError(null); // ✅ очищаем ошибку
     } catch {
       setError('Unable to add a todo');
     } finally {
@@ -54,7 +55,9 @@ export const App: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await deleteTodo(id);
+
       setTodos(prev => prev.filter(todo => todo.id !== id));
+      setError(null); // ✅ очищаем ошибку
     } catch {
       setError('Unable to delete a todo');
     }
@@ -79,28 +82,27 @@ export const App: React.FC = () => {
           </form>
         </header>
 
-        {!!todos.length && (
-          <section className="todoapp__main" data-cy="TodoList">
-            {todos.map(todo => (
-              <div key={todo.id} data-cy="Todo">
-                <span data-cy="TodoTitle">{todo.title}</span>
+        {/* ✅ ВСЕГДА РЕНДЕРИМ СЕКЦИЮ */}
+        <section className="todoapp__main" data-cy="TodoList">
+          {todos.map(todo => (
+            <div key={todo.id} data-cy="Todo">
+              <span data-cy="TodoTitle">{todo.title}</span>
 
-                <button
-                  type="button"
-                  data-cy="TodoDelete"
-                  onClick={() => handleDelete(todo.id)}
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </section>
-        )}
+              <button
+                type="button"
+                data-cy="TodoDelete"
+                onClick={() => handleDelete(todo.id)}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </section>
       </div>
 
       <ErrorNotification
         error={error}
-        onClose={() => setError('')}
+        onClose={() => setError(null)}
       />
     </div>
   );
