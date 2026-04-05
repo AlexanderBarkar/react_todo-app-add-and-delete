@@ -18,6 +18,7 @@ export const App: React.FC = () => {
   const loadTodos = async () => {
     try {
       const data = await getTodos();
+
       setTodos(data);
       setError(null);
     } catch {
@@ -31,7 +32,9 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!error) return;
+    if (!error) {
+      return;
+    }
 
     const timer = setTimeout(() => {
       setError(null);
@@ -47,6 +50,7 @@ export const App: React.FC = () => {
 
     if (!trimmed) {
       setError('Title should not be empty');
+
       return;
     }
 
@@ -61,6 +65,7 @@ export const App: React.FC = () => {
 
     try {
       const created = await createTodo(trimmed);
+
       setTodos(prev => [...prev, created]);
       setTitle('');
       setError(null);
@@ -159,10 +164,7 @@ export const App: React.FC = () => {
         </section>
       </div>
 
-      <ErrorNotification
-        error={error}
-        onClose={() => setError(null)}
-      />
+      <ErrorNotification error={error} onClose={() => setError(null)} />
     </div>
   );
 };
