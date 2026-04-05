@@ -1,4 +1,4 @@
-const BASE_URL = 'https://mate-academy.github.io/react_todo-app/api';
+const BASE_URL = 'https://mate.academy/students-api';
 
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
