@@ -1,11 +1,20 @@
 import { Todo } from '../types/Todo';
+import { client } from '../utils/fetchClient';
 
-export const getTodos = (): Promise<Todo[]> => {
-  return fetch('/todos?userId=1').then(res => {
-    if (!res.ok) {
-      throw new Error();
-    }
+export const USER_ID = 4111;
 
-    return res.json();
+export const getTodos = () => {
+  return client.get<Todo[]>(`/todos?userId=${USER_ID}`);
+};
+
+export const createTodo = (title: string) => {
+  return client.post<Todo>('/todos', {
+    userId: USER_ID,
+    title,
+    completed: false,
   });
+};
+
+export const deleteTodo = (id: number) => {
+  return client.delete(`/todos/${id}`);
 };

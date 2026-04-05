@@ -3,9 +3,9 @@ type Props = {
 };
 
 export const TodoLoader = ({ isLoading }: Props) => {
-  return (
-    <div data-cy="TodoLoader">
-      {isLoading && 'Loading...'}
-    </div>
-  );
+  if (!isLoading) {
+    return null;
+  }
+
+  return <div data-cy="TodoLoader" className="is-active" />;
 };

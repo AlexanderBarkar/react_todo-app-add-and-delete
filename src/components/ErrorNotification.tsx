@@ -1,14 +1,19 @@
-export const ErrorNotification = ({ error, onClose }: Props) => {
-  if (!error) {
-    return null;
-  }
+type Props = {
+  error: string | null;
+  onClose: () => void;
+};
 
+export const ErrorNotification = ({ error, onClose }: Props) => {
   return (
-    <div data-cy="ErrorNotification">
-      {error}
-      <button data-cy="HideErrorButton" onClick={onClose}>
-        ×
-      </button>
+    <div data-cy="ErrorNotification" className={error ? '' : 'hidden'}>
+      {error && (
+        <>
+          {error}
+          <button data-cy="HideErrorButton" onClick={onClose}>
+            ×
+          </button>
+        </>
+      )}
     </div>
   );
 };

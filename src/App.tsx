@@ -1,42 +1,107 @@
-import { useEffect, useState } from 'react';
-import { getTodos } from './api/todos';
+import React, { useEffect, useRef, useState } from 'react';
+import { getTodos, createTodo, deleteTodo } from './api/todos';
 import { Todo } from './types/Todo';
-import { TodoList } from './components/TodoList';
-import { TodoLoader } from './components/TodoLoader';
 import { ErrorNotification } from './components/ErrorNotification';
 
-export const App = () => {
+export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [title, setTitle] = useState('');
+  const [error, setError] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // ✅ СНАЧАЛА объявляем функцию
+  const loadTodos = async () => {
+    try {
+      const data = await getTodos();
+      setTodos(data);
+    } catch {
+      setError('Unable to load todos');
+    }
+  };
+
+  // ✅ ПОТОМ используем
   useEffect(() => {
-    setIsLoading(true);
-
-    getTodos()
-      .then(setTodos)
-      .catch(() => {
-        setError('Unable to load todos');
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    loadTodos();
+    inputRef.current?.focus();
   }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const trimmed = title.trim();
+
+    if (!trimmed) {
+      setError('Title should not be empty');
+      return;
+    }
+
+    try {
+      setIsAdding(true);
+
+      const newTodo = await createTodo(trimmed);
+      setTodos(prev => [...prev, newTodo]);
+      setTitle('');
+    } catch {
+      setError('Unable to add a todo');
+    } finally {
+      setIsAdding(false);
+      inputRef.current?.focus();
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteTodo(id);
+      setTodos(prev => prev.filter(todo => todo.id !== id));
+    } catch {
+      setError('Unable to delete a todo');
+    }
+  };
 
   return (
     <div className="todoapp">
       <h1 className="todoapp__title">todos</h1>
 
-      <input data-cy="NewTodoField" />
+      <div className="todoapp__content">
+        <header className="todoapp__header">
+          <form onSubmit={handleSubmit}>
+            <input
+              ref={inputRef}
+              data-cy="NewTodoField"
+              className="todoapp__new-todo"
+              placeholder="What needs to be done?"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              disabled={isAdding}
+            />
+          </form>
+        </header>
 
-      <TodoLoader isLoading={isLoading} />
+        {!!todos.length && (
+          <section className="todoapp__main" data-cy="TodoList">
+            {todos.map(todo => (
+              <div key={todo.id} data-cy="Todo">
+                <span data-cy="TodoTitle">{todo.title}</span>
+
+                <button
+                  type="button"
+                  data-cy="TodoDelete"
+                  onClick={() => handleDelete(todo.id)}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </section>
+        )}
+      </div>
 
       <ErrorNotification
         error={error}
-        onClose={() => setError(null)}
+        onClose={() => setError('')}
       />
-
-      <TodoList todos={todos} />
     </div>
   );
 };
