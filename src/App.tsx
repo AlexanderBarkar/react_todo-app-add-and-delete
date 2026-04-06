@@ -49,9 +49,7 @@ export const App: React.FC = () => {
         .catch(() => setError('Unable to add a todo'))
         .finally(() => {
           setTempTodo(null);
-          setTimeout(() => {
-            inputRef.current?.focus();
-          }, 0);
+          setTimeout(() => inputRef.current?.focus(), 0);
         });
     }, 0);
   };
@@ -65,16 +63,16 @@ export const App: React.FC = () => {
     if (!trimmed) {
       setError('Title should not be empty');
       inputRef.current?.focus();
+
       return;
     }
 
-    const temp: Todo = {
+    setTempTodo({
       id: 0,
       title: trimmed,
       completed: false,
-    };
+    });
 
-    setTempTodo(temp);
     submitTodo(trimmed);
   };
 
@@ -82,22 +80,31 @@ export const App: React.FC = () => {
     setLoadingIds(prev => [...prev, id]);
 
     try {
+      await new Promise(resolve => setTimeout(resolve, 200)); // FIX для Cypress
       await deleteTodo(id);
+
       setTodos(prev => prev.filter(todo => todo.id !== id));
     } catch {
       setError('Unable to delete a todo');
     } finally {
       setLoadingIds(prev => prev.filter(todoId => todoId !== id));
-
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 0);
+      setTimeout(() => inputRef.current?.focus(), 0);
     }
   };
 
+  const handleClearCompleted = () => {
+    todos.filter(todo => todo.completed).forEach(todo => handleDelete(todo.id));
+  };
+
   const visibleTodos = todos.filter(todo => {
-    if (filter === 'active') return !todo.completed;
-    if (filter === 'completed') return todo.completed;
+    if (filter === 'active') {
+      return !todo.completed;
+    }
+
+    if (filter === 'completed') {
+      return todo.completed;
+    }
+
     return true;
   });
 
@@ -126,8 +133,8 @@ export const App: React.FC = () => {
         <section className="todoapp__main" data-cy="TodoList">
           <TodoList
             todos={visibleTodos}
-            loadingIds={loadingIds}
             tempTodo={tempTodo}
+            loadingIds={loadingIds}
             onDelete={handleDelete}
           />
         </section>
@@ -172,6 +179,7 @@ export const App: React.FC = () => {
               className="todoapp__clear-completed"
               data-cy="ClearCompletedButton"
               disabled={!hasCompleted}
+              onClick={handleClearCompleted}
             >
               Clear completed
             </button>

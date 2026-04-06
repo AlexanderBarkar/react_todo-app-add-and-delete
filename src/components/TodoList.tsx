@@ -30,7 +30,7 @@ export const TodoList: React.FC<Props> = ({
         <TodoItem
           key={tempTodo.id}
           todo={tempTodo}
-          isTemp={true}
+          isTemp
           isLoading={false}
           handleTodoDelete={() => {}}
         />

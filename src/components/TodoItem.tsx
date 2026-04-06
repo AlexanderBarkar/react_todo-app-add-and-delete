@@ -18,10 +18,7 @@ export const TodoItem: React.FC<Props> = ({
   handleTodoDelete,
 }) => {
   return (
-    <div
-      data-cy="Todo"
-      className={`todo ${todo.completed ? 'completed' : ''}`}
-    >
+    <div data-cy="Todo" className={`todo ${todo.completed ? 'completed' : ''}`}>
       <label className="todo__status-label">
         <input
           data-cy="TodoStatus"
@@ -36,22 +33,18 @@ export const TodoItem: React.FC<Props> = ({
         {todo.title}
       </span>
 
-      {/* ❗ кнопку НЕ прячем при loading */}
-      {!isTemp && (
-        <button
-          type="button"
-          className="todo__remove"
-          data-cy="TodoDelete"
-          onClick={handleTodoDelete}
-        >
-          ×
-        </button>
-      )}
+      <button
+        type="button"
+        className="todo__remove"
+        data-cy="TodoDelete"
+        onClick={handleTodoDelete}
+      >
+        ×
+      </button>
 
-      {/* ✅ loader показывается только при удалении ИЛИ temp */}
       <div
         data-cy="TodoLoader"
-        className={`modal overlay ${(isLoading || isTemp) ? 'is-active' : ''}`}
+        className={`modal overlay ${isLoading || isTemp ? 'is-active' : ''}`}
       >
         <div className="modal-background has-background-white-ter" />
         <div className="loader" />
