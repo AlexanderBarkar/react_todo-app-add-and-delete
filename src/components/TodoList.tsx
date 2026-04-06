@@ -3,18 +3,25 @@ import { TodoItem } from './TodoItem';
 
 type Props = {
   todos: Todo[];
-  tempTodo: Todo | null;
+  loadingIds: number[];
   onDelete: (id: number) => void;
 };
 
-export const TodoList = ({ todos, tempTodo, onDelete }: Props) => {
+export const TodoList: React.FC<Props> = ({
+  todos,
+  loadingIds,
+  onDelete,
+}) => {
   return (
-    <section className="todoapp__main" data-cy="TodoList">
+    <>
       {todos.map(todo => (
-        <TodoItem key={todo.id} todo={todo} onDelete={onDelete} />
+        <TodoItem
+          key={todo.id}
+          todo={todo}
+          isTemp={loadingIds?.includes(todo.id)}
+          handleTodoDelete={() => onDelete(todo.id)}
+        />
       ))}
-
-      {tempTodo && <TodoItem todo={tempTodo} isTemp onDelete={() => {}} />}
-    </section>
+    </>
   );
 };
