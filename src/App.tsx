@@ -1,7 +1,6 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import cn from 'classnames';
-
 import {
   UNABLE_LOAD_ERROR,
   UNABLE_TO_ADD_ERROR,
@@ -15,36 +14,44 @@ import { Header } from './components/Header/Header';
 import { Footer } from './components/Footer/Footer';
 import { TodoList } from './components/TodoList/TodoList';
 import { Status } from './types/Status';
-import { wait } from './utils/fetchClient';
 import { getFilteredTodos } from './utils/getFilteredTodos';
-
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [inputText, setInputText] = useState('');
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
   const [status, setStatus] = useState<Status>(Status.All);
   const [errorMessage, setErrorMessage] = useState('');
+  const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showError = (message: string) => {
+    if (errorTimerRef.current) {
+      clearTimeout(errorTimerRef.current);
+    }
+
+    setErrorMessage(message);
+    errorTimerRef.current = setTimeout(() => setErrorMessage(''), 3000);
+  };
+
   const [processingTodos, setProcessingTodos] = useState<number[]>([]);
   const filteredTodos = getFilteredTodos(todos, status);
-
   const itemsLeft = todos.filter(({ completed }) => {
     return !completed;
   }).length;
-
   const hasCompleted = todos.some(todo => todo.completed);
-
   const createTodoHandler = async (newTodo: Omit<Todo, 'id'>) => {
-    setTempTodo({ ...newTodo, id: 0 });
+    if (errorTimerRef.current) {
+      clearTimeout(errorTimerRef.current);
+    }
 
+    setErrorMessage('');
+    setTempTodo({ ...newTodo, id: 0 });
     createTodo(newTodo)
       .then(createdTodo => {
         setTodos(currentTodos => [...currentTodos, createdTodo]);
         setInputText('');
       })
       .catch(() => {
-        setErrorMessage(UNABLE_TO_ADD_ERROR);
+        showError(UNABLE_TO_ADD_ERROR);
         setTodos(todos);
-        wait(3000).then(() => setErrorMessage(''));
       })
       .finally(() => {
         setTempTodo(null);
@@ -53,7 +60,6 @@ export const App: React.FC = () => {
 
   const handleDeteleTodo = (deletedId: number) => {
     setProcessingTodos(prevProcessing => [...prevProcessing, deletedId]);
-
     deleteTodo(deletedId)
       .then(() => {
         setTodos((currentTodos: Todo[]) =>
@@ -61,8 +67,7 @@ export const App: React.FC = () => {
         );
       })
       .catch(error => {
-        setErrorMessage(UNABLE_TO_DELETE_ERROR);
-
+        showError(UNABLE_TO_DELETE_ERROR);
         throw error;
       })
       .finally(() => {
@@ -72,22 +77,17 @@ export const App: React.FC = () => {
 
   const removeHandleDeleteTodo = () => {
     const completedTodos = todos.filter(({ completed }) => completed);
-    const activeTodos = todos.filter(({ completed }) => !completed);
 
     completedTodos.forEach(({ id }) => handleDeteleTodo(id));
-    setTodos(activeTodos);
   };
 
   useEffect(() => {
     getTodos()
       .then(setTodos)
       .catch(() => {
-        setErrorMessage(UNABLE_LOAD_ERROR);
-
-        return wait(3000).then(() => setErrorMessage(''));
+        showError(UNABLE_LOAD_ERROR);
       });
   }, []);
-
   if (!USER_ID) {
     return <UserWarning />;
   }
@@ -95,7 +95,6 @@ export const App: React.FC = () => {
   return (
     <div className="todoapp">
       <h1 className="todoapp__title">todos</h1>
-
       <div className="todoapp__content">
         <Header
           todos={todos}
@@ -105,7 +104,6 @@ export const App: React.FC = () => {
           setErrorMessage={setErrorMessage}
           createTodoHandler={createTodoHandler}
         />
-
         {todos.length > 0 && (
           <>
             <TodoList
@@ -124,7 +122,6 @@ export const App: React.FC = () => {
           </>
         )}
       </div>
-
       <div
         data-cy="ErrorNotification"
         className={cn(
